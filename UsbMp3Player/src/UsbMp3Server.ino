@@ -37,11 +37,31 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
   <!DOCTYPE html>
   <html>
   <head>
+      <title> STM34F4 Media Control </title>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
       <style>
           body {
-              background-image: url("http://templatemints.com/rttheme13/images/background_images/abstract_background7.jpg");
-              background-repeat: repeat;
+            /* IE10+ */
+            background-image: -ms-linear-gradient(top, #008080 0%, #FFFFFF 25%, #05C1FF 50%, #FFFFFF 75%, #005757 100%);
+
+            /* Mozilla Firefox */
+            background-image: -moz-linear-gradient(top, #008080 0%, #FFFFFF 25%, #05C1FF 50%, #FFFFFF 75%, #005757 100%);
+
+            /* Opera */
+            background-image: -o-linear-gradient(top, #008080 0%, #FFFFFF 25%, #05C1FF 50%, #FFFFFF 75%, #005757 100%);
+
+            /* Webkit (Safari/Chrome 10) */
+            background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #008080), color-stop(25, #FFFFFF), color-stop(50, #05C1FF), color-stop(75, #FFFFFF), color-stop(100, #005757));
+
+            /* Webkit (Chrome 11+) */
+            background-image: -webkit-linear-gradient(top, #008080 0%, #FFFFFF 25%, #05C1FF 50%, #FFFFFF 75%, #005757 100%);
+
+            /* W3C Markup */
+            background-image: linear-gradient(to bottom, #008080 0%, #FFFFFF 25%, #05C1FF 50%, #FFFFFF 75%, #005757 100%);
+
+          }
+          html, body {
+              height: 100%;
           }
           .button {
               position: relative;
@@ -50,6 +70,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
               font-size: 16px;
               color: #FFFFFF;
               padding: 10px;
+              margin: 3px;
               width: 150px;
               text-align: center;
               -webkit-transition-duration: 0.4s;
@@ -104,8 +125,15 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       <div class="col-centered">
           <h2 id="song_title" class="center">Loading Song Title ...</h2>
           <a href="previous_song"><button class="center button">Previous Song</button></a>
-          &nbsp;<a href="play_pause"><button class="center button">Play/Pause</button></a>` `
-          &nbsp;<a href="next_song"><button class="center button">Next Song</button></a>
+          <a href="play_pause"><button class="center button">Play/Pause</button></a>
+          <a href="next_song"><button class="center button">Next Song</button></a>
+          <br>
+          <a href="toggle_mute"><button class="center button">Toggle Mute</button></a>
+          <a href="volume_down"><button class="center button">Volume Down</button></a>
+          <a href="volume_up"><button class="center button">Volume Up</button></a>
+          <br>
+          <a href="update"><button class="center button">Update</button></a>
+
       </div>
   </body>
   </html>
@@ -115,22 +143,43 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 void handlePreviousSong() {
   handleRoot();
 
-  SerialPrint("1");
-  delay(1000);
+  Serial.print(1);
+  // SerialPrint("1");
+  // delay(1000);
 }
 
 void handlePlayPause() {
-  handleRoot();
+ handleRoot();
+ sendSerialRoot();
 
-  SerialPrint("2");
-  delay(1000);
+  Serial.print(2);
 }
 
 void handleNextSong() {
   handleRoot();
 
-  SerialPrint("3");
-  delay(1000);
+  Serial.print(3);
+}
+
+void handleToggleMute() {
+  handleRoot();
+  sendSerialRoot();
+
+  Serial.print(4);
+}
+
+void handleVolumeDown() {
+  handleRoot();
+  sendSerialRoot();
+
+  Serial.print(5);
+}
+
+void handleVolumeUp() {
+  handleRoot();
+  sendSerialRoot();
+
+  Serial.print(6);
 }
 
 void handleReboot() {
@@ -143,6 +192,10 @@ void handleRoot() {
   servertcp.send(200, "text/html", INDEX_HTML);
 }
 
+void sendSerialRoot(){
+  Serial.print(0);
+}
+
 
 void setup() {
   Serial.begin(9600);
@@ -152,45 +205,48 @@ void setup() {
   digitalWrite(ledPin, LOW);
 
   // Connect to WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  // Serial.println();
+  // Serial.print("Connecting to ");
+  // Serial.println(ssid);
 
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    // Serial.print(".");
   }
-  Serial.println("");
-  Serial.println("WiFi connected");
+  // Serial.println("");
+  // Serial.println("WiFi connected");
 
     // config static IP
   IPAddress ip(192, 168, 1, 200); // where xx is the desired IP Address
   IPAddress gateway(192, 168, 1, 254); // set gateway to match your network
-  Serial.print(F("Setting static ip to : "));
-  Serial.println(ip);
+  // Serial.print(F("Setting static ip to : "));
+  // Serial.println(ip);
   IPAddress subnet(255, 255, 255, 0); // set subnet mask to match your network
   WiFi.config(ip, gateway, subnet);
 
 
   // Print the IP address
-  Serial.print("Use this URL to connect: ");
-  Serial.print("http://");
-  Serial.print(WiFi.localIP());
-  Serial.println("/");
+  // Serial.print("Use this URL to connect: ");
+  // Serial.print("http://");
+  // Serial.print(WiFi.localIP());
+  // Serial.println("/");
 
 
   httpUpdater.setup(&servertcp);
 
   // Start the server
-  Serial.println("Server started");
+  // Serial.println("Server started");
 
   servertcp.on("/", handleRoot);
   servertcp.on("/reboot", handleReboot);
   servertcp.on("/previous_song", handlePreviousSong);
   servertcp.on("/play_pause", handlePlayPause);
   servertcp.on("/next_song", handleNextSong);
+  servertcp.on("/toggle_mute", handleToggleMute);
+  servertcp.on("/volume_down", handleVolumeDown);
+  servertcp.on("/volume_up", handleVolumeUp);
   servertcp.begin();
 
   webSocket.begin();
@@ -208,7 +264,7 @@ void loop() {
     i++; //increment buffer by 1 for next byte
     if (c == '|'){
       Buffer[i]='\0';
-      Serial.println(Buffer);
+      // Serial.println(Buffer);
       i = 0; //reset to get new packet
       SongTitle=String(Buffer);
       SongTitle.remove(SongTitle.length()-1, 1);
